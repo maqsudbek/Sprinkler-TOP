@@ -1,0 +1,32 @@
+services:
+  sprinkler_postgres:
+    image: postgres:16
+    container_name: sprinkler_postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-sprinkler}
+      POSTGRES_USER: ${POSTGRES_USER:-sprinkler}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - "${POSTGRES_HOST_PORT:-5432}:5432"
+    volumes:
+      - ./postgresql/data:/var/lib/postgresql/data
+      - ./postgresql/initdb:/docker-entrypoint-initdb.d
+      - ./postgresql/backups:/backups
+  healthcheck:
+    test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER}"]
+    interval: "10s"
+    timeout: "5s"
+    retries: 5
+      options:
+    retries: 5
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "3"
+    restart: unless-stopped
+    networks:
+      - sprinkler_postgres_net
+  sprinkler_postgres_net:
+    driver: bridge

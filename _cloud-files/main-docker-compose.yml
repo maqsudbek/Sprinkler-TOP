@@ -1,0 +1,228 @@
+version: '3.9'
+
+#---------------------------------------------------
+services:
+  #---------------------------------------------------
+  mainserver:
+    build: ./mainserver
+    container_name: mainserver
+    # ports:
+    #   - "3000:3000"
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "3"
+    volumes:
+      - ./mainserver:/usr/src/app
+    networks:
+      - mynetwork
+
+  #---------------------------------------------------
+  speaker:
+    build: ./speaker
+    container_name: speaker
+    # ports:
+    #   - "3001:3001"
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "3"
+    volumes:
+      - ./speaker:/usr/src/app
+    networks:
+      - mynetwork
+
+  #---------------------------------------------------
+  waterlevel:
+    build: ./waterlevel
+    container_name: waterlevel
+    # ports:
+    #   - "3002:3002"
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "3"
+    volumes:
+      - ./waterlevel:/usr/src/app
+    networks:
+      - mynetwork
+
+  #---------------------------------------------------
+  waterleveltest:
+    build: ./waterleveltest
+    container_name: waterleveltest
+    # ports:
+    #   - "4001:4001"
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "3"
+    networks:
+      - mynetwork
+    volumes:
+      - ./waterleveltest:/usr/src/app
+
+
+  #---------------------------------------------------
+  mosquitto:
+    image: eclipse-mosquitto:latest
+    container_name: mosquitto
+    ports:
+      - "1883:1883"  # MQTT port
+      - "8883:8883"  # MQTT over TLS port
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "3"
+    volumes:
+      # - ./mosquitto:/mosquitto
+      - ./mosquitto/config:/mosquitto/config
+      - ./mosquitto/data:/mosquitto/data
+      - ./mosquitto/log:/mosquitto/log
+      # - /etc/letsencrypt/live/iotserver.uz:/etc/letsencrypt/live/iotserver.uz
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+    restart: always
+    networks:
+      - mynetwork
+
+
+  #===============================================
+
+  #---------------------------------------------------
+  shadowsocks:
+    build: ./shadowsocks
+    container_name: shadowsocks
+    ports:
+      - "45743:8388"
+      - "45743:8388/udp"
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    environment:
+      - METHOD=aes-256-gcm
+      - PASSWORD=myShadow321!@
+      - PLUGIN=v2ray-plugin
+      - PLUGIN_OPTS=server
+    networks:
+      - mynetwork
+
+  #---------------------------------------------------
+  time_publisher:
+    build: ./publish_time
+    container_name: time_publisher
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "3"
+    volumes:
+      - ./publish_time:/usr/src/app
+    restart: always
+    networks:
+      - mynetwork
+
+  #---------------------------------------------------
+  # influxdb:
+  #   image: influxdb:latest
+  #   container_name: influxdb
+  #   logging:
+  #     driver: json-file
+  #     options:
+  #       max-size: "50m"
+  #       max-file: "3"
+  #   # ports:
+  #   #   - "8086:8086"  # mynetwork port for InfluxDB
+  #   volumes:
+  #     - ./influxdb/data:/var/lib/influxdb2
+  #     - ./influxdb/config:/etc/influxdb2
+  #     - ./influxdb/log:/var/log/influxdb
+  #   environment:
+  #     - DOCKER_INFLUXDB_INIT_MODE=setup
+  #     - DOCKER_INFLUXDB_INIT_USERNAME=dbadmin
+  #     - DOCKER_INFLUXDB_INIT_PASSWORD=influxPassWD321!@#
+  #     - DOCKER_INFLUXDB_INIT_ORG=my-org
+  #     - DOCKER_INFLUXDB_INIT_BUCKET=my-bucket
+  #     - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=my-super-secret-auth-token
+  #   networks:
+  #     - mynetwork
+  #   restart: always
+
+  #---------------------------------------------------
+  mysql:
+    image: mysql:8.0
+    container_name: mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: myMySQLpwd121  # Use a secure password
+      MYSQL_DATABASE: testdatabase          # Optional: specify a database to be created on image startup
+      MYSQL_USER: admin            # Optional: specify a user to be created on image startup
+      MYSQL_PASSWORD: myMySqLAdminPwd321       # Optional: specify a password for the user created
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./mysql:/var/lib/mysql
+    networks:
+      - mynetwork
+    restart: always
+
+  #---------------------------------------------------
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    container_name: phpmyadmin
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+      PMA_ARBITRARY: 1  # Allows to log in to arbitrary servers (useful if you want to connect to the database not only locally)
+    # ports:
+    #   - "9090:80"
+    volumes:
+      - ./phpmyadmin/sessions:/sessions
+    networks:
+      - mynetwork
+    depends_on:
+      - mysql
+    restart: always
+
+  #---------------------------------------------------
+  #---------------------------------------------------
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "3"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/cert_file:/etc/nginx/cert_file
+      - ./nginx/html:/usr/share/nginx/html
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+    networks:
+      - mynetwork
+    # network_mode: "host" # Use host network instead of Docker's bridge network
+    depends_on:
+      - mainserver
+      - speaker
+      - waterlevel
+      - waterleveltest
+      # - influxdb
+      - phpmyadmin
+      # - waterlevel-api
+      # - wlmtest
+    restart: always
+
+
+networks:
+  mynetwork:
+    name: mynetwork
+    external: true

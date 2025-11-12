@@ -3,3 +3,8 @@
 # exist as separate repositories
 webapi/
 webota/
+postgresql/.env
+postgresql/data/*
+!postgresql/data/.gitkeep
+postgresql/backups/*
+!postgresql/backups/.gitkeep
