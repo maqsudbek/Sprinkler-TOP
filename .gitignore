@@ -1,0 +1,5 @@
+# Exclude webapi and webota folders as they are separate subprojects
+# This repo syncs with server (/home/maqsud/sprinkler) where these folders
+# exist as separate repositories
+webapi/
+webota/
