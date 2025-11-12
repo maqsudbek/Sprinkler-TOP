@@ -16,3 +16,8 @@ This repository contains the top-level structure for the Sprinkler IoT project. 
 ```
 
 **Note:** The `webapi/` and `webota/` folders are excluded from this repository as they are separate subprojects with their own repositories.
+
+Here are those subproject repos:
+
+- [webAPI](https://github.com/maqsudbek/Sprinkler-webAPI)
+- [webOTA](https://github.com/maqsudbek/Sprinkler-webOTA)
