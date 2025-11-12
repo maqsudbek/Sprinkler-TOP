@@ -1,0 +1,53 @@
+name: Deploy to server (git-based)
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch: {}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (for workflow context only)
+        uses: actions/checkout@v4
+
+      - name: Setup SSH to server
+        shell: bash
+        run: |
+          mkdir -p ~/.ssh
+          printf "%s" "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -p ${{ vars.SSH_PORT }} ${{ vars.SSH_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Deploy via git on server
+        shell: bash
+        run: |
+          ssh -i ~/.ssh/id_ed25519 -p ${{ vars.SSH_PORT }} \
+            ${{ vars.SSH_USER }}@${{ vars.SSH_HOST }} 'bash -lc "
+              set -euo pipefail
+              mkdir -p ${{ vars.DEPLOY_PATH }}
+              cd ${{ vars.DEPLOY_PATH }}
+
+              if [ ! -d .git ]; then
+                echo \"Initializing repo at ${{ vars.DEPLOY_PATH }}\"
+                git clone github-sprinkler:maqsudbek/Sprinkler-TOP.git . 
+              fi
+
+              # Abort if working tree is dirty
+              if [ -n \"\$(git status --porcelain)\" ]; then
+                echo \"ERROR: Uncommitted changes exist on server. Commit/push them (to a non-main branch) first.\" >&2
+                git status --porcelain
+                exit 1
+              fi
+
+              # Ensure correct remote and fetch
+              git remote set-url origin github-sprinkler:maqsudbek/Sprinkler-TOP.git
+              git fetch origin --prune
+
+              # Checkout main for deploy and hard-reset to origin/main
+              git checkout main
+              git reset --hard origin/main
+
+              echo Deployed commit: \$(git rev-parse --short HEAD)
+            "'
