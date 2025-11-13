@@ -1,0 +1,14 @@
+{
+  "Servers": {
+    "1": {
+      "Name": "Sprinkler PostgreSQL",
+      "Group": "Servers",
+      "Host": "sprinkler_postgres",
+      "Port": 5432,
+      "MaintenanceDB": "sprinkler",
+      "Username": "sprinkler",
+      "SSLMode": "prefer",
+      "Comment": "Main Sprinkler Database Server"
+    }
+  }
+}

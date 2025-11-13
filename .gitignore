@@ -3,8 +3,22 @@
 # exist as separate repositories
 webapi/
 webota/
+
+# PostgreSQL sensitive data and runtime files
 postgresql/.env
 postgresql/data/*
 !postgresql/data/.gitkeep
 postgresql/backups/*
 !postgresql/backups/.gitkeep
+
+# pgAdmin sensitive data and runtime files
+pgadmin/.env
+pgadmin/data/
+pgadmin/sessions/
+pgadmin/storage/
+pgadmin/*.db
+pgadmin/*.db-shm
+pgadmin/*.db-wal
+pgadmin/*.log
+pgadmin/logs/
+

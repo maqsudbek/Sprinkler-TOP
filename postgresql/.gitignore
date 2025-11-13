@@ -1,0 +1,21 @@
+# PostgreSQL sensitive data and runtime files
+
+# Environment file with credentials
+.env
+
+# Database data directory
+data/*
+!data/.gitkeep
+
+# Database backups
+backups/*
+!backups/.gitkeep
+
+# Logs
+*.log
+logs/
+
+# PostgreSQL temporary files
+*.pid
+*.lock
+*.tmp

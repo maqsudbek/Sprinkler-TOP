@@ -9,7 +9,8 @@ This repository contains the top-level structure for the Sprinkler IoT project. 
 .
 ├── .github/              # GitHub configuration files
 ├── .gitignore            # Git ignore rules
-├── docker-compose.yml    # Docker Compose configuration for the PostgreSQL service
+├── docker-compose.yml    # Docker Compose configuration for PostgreSQL and pgAdmin services
+├── pgadmin/              # pgAdmin web-based GUI configuration and settings
 ├── postgresql/           # PostgreSQL database configuration, init scripts, and persistent storage mounts
 ├── README.md             # Project documentation (this file)
 ├── webapi/              # (Not tracked) Separate repository for Web API
@@ -58,6 +59,51 @@ Session handling can be secure cookies or JWT as configured in webapi and webota
 The same `postgresql` directory is used in both environments so the initialization SQL, backups, and configuration stay consistent.
 
 The `_cloud-files/` folder is informational only; it captures the broader server configuration but is not modified by this project.
+
+## pgAdmin Web Interface
+
+pgAdmin provides a web-based GUI for managing PostgreSQL databases, accessible both locally and on the cloud server.
+
+### Local Access
+
+1. **Configure pgAdmin:**
+   ```powershell
+   cp pgadmin\.env.example pgadmin\.env
+   ```
+   Edit `pgadmin\.env` and set your login credentials.
+
+2. **Start pgAdmin:**
+   ```powershell
+   docker compose --env-file postgresql\.env --env-file pgadmin\.env up -d
+   ```
+
+3. **Access locally:**
+   - URL: http://localhost:5050
+   - Email: (from `PGADMIN_DEFAULT_EMAIL` in `pgadmin/.env`)
+   - Password: (from `PGADMIN_DEFAULT_PASSWORD` in `pgadmin/.env`)
+
+### Cloud Access
+
+1. **Configure on server:**
+   ```bash
+   cd /home/maqsud/sprinkler
+   cp pgadmin/.env.example pgadmin/.env
+   ```
+   Edit `pgadmin/.env` with production credentials.
+
+2. **Start services:**
+   ```bash
+   docker compose --env-file postgresql/.env --env-file pgadmin/.env up -d
+   ```
+
+3. **Access via domain:**
+   - URL: https://pg.iotserver.uz
+   - Email: (from `PGADMIN_DEFAULT_EMAIL`)
+   - Password: (from `PGADMIN_DEFAULT_PASSWORD`)
+
+4. **Nginx configuration:** See `pgadmin/README.md` for required Nginx server block configuration to enable `pg.iotserver.uz` access.
+
+For detailed pgAdmin setup, troubleshooting, and Nginx configuration examples, see `pgadmin/README.md`.
 
 
 ## Important Configs of Cloud Server
