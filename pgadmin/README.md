@@ -138,7 +138,6 @@ server {
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_set_header X-Script-Name /;
         
         # WebSocket support (for pgAdmin notifications)
         proxy_http_version 1.1;
@@ -281,6 +280,8 @@ Additional pgAdmin configuration options:
 - `PGADMIN_CONFIG_*` - Any pgAdmin config setting
 
 See [pgAdmin Docker Documentation](https://www.pgadmin.org/docs/pgadmin4/latest/container_deployment.html) for more options.
+
+> **Heads-up:** Do not forward an `X-Script-Name: /` header (or set `SCRIPT_NAME=/`) when exposing pgAdmin at the domain root. That header forces pgAdmin to believe it is mounted at a sub-path and will trigger an endless HTTP 308 redirect loop back to `/`. Only supply `X-Script-Name` if you intentionally host pgAdmin under a prefix like `/pgadmin`.
 
 ## Version Information
 
