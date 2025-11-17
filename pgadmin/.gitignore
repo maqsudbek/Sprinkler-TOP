@@ -1,0 +1,18 @@
+# pgAdmin sensitive data and runtime files
+
+# Environment file with credentials
+.env
+
+# pgAdmin data and sessions
+data/
+sessions/
+storage/
+
+# Database files
+*.db
+*.db-shm
+*.db-wal
+
+# Logs
+*.log
+logs/

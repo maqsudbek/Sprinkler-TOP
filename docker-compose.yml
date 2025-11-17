@@ -1,0 +1,67 @@
+services:
+  sprinkler_postgres:
+    image: postgres:16
+    container_name: sprinkler_postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-sprinkler}
+      POSTGRES_USER: ${POSTGRES_USER:-sprinkler}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - "${POSTGRES_HOST_PORT:-5432}:5432"
+    volumes:
+      - ./postgresql/data:/var/lib/postgresql/data
+      - ./postgresql/initdb:/docker-entrypoint-initdb.d
+      - ./postgresql/backups:/backups
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER}"]
+      interval: "10s"
+      timeout: "5s"
+      retries: 5
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "3"
+    restart: unless-stopped
+    networks:
+      - sprinkler_postgres_net
+
+  sprinkler_pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: sprinkler_pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-admin@iotserver.uz}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
+      PGADMIN_CONFIG_SERVER_MODE: ${PGADMIN_CONFIG_SERVER_MODE:-True}
+      PGADMIN_CONFIG_ENHANCED_COOKIE_PROTECTION: ${PGADMIN_CONFIG_ENHANCED_COOKIE_PROTECTION:-True}
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: ${PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED:-True}
+    ports:
+      - "${PGADMIN_HOST_PORT:-5050}:80"
+    volumes:
+      - sprinkler_pgadmin_data:/var/lib/pgadmin
+      - ./pgadmin/servers.json:/pgadmin4/servers.json:ro
+    depends_on:
+      sprinkler_postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/misc/ping"]
+      interval: "10s"
+      timeout: "5s"
+      retries: 5
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "3"
+    restart: unless-stopped
+    networks:
+      - sprinkler_postgres_net
+
+volumes:
+  sprinkler_pgadmin_data:
+    name: sprinkler_pgadmin_data
+
+networks:
+  sprinkler_postgres_net:
+    driver: bridge
