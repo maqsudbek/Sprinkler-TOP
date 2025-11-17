@@ -175,7 +175,6 @@ server {
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_set_header X-Script-Name /;
         
         # WebSocket support
         proxy_http_version 1.1;
@@ -195,6 +194,8 @@ server {
 - `localhost` in nginx container ≠ host machine
 - Docker containers communicate via **container names**
 - `sprinkler_pgadmin` must be accessible from nginx's network
+
+> **Redirect loop warning:** Leave `X-Script-Name` unset when hosting pgAdmin directly at `https://pg.iotserver.uz/`. Adding `X-Script-Name: /` causes pgAdmin to issue an endless HTTP 308 redirect back to `/`. Only set that header if you deliberately serve pgAdmin from a sub-path (e.g., `/pgadmin`).
 
 ### SSL Certificate Setup
 

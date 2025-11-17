@@ -53,7 +53,6 @@ server {
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_set_header X-Script-Name /;
         
         # WebSocket support (for pgAdmin notifications)
         proxy_http_version 1.1;
@@ -99,6 +98,8 @@ server {
 
 **MUST use:**
 - ✅ `http://sprinkler_pgadmin:80` - Container name and internal port
+
+> **Important:** Earlier drafts of this config included `proxy_set_header X-Script-Name /;`. Keep that line **removed** when pgAdmin is published at the domain root. Sending `X-Script-Name: /` makes pgAdmin believe it lives under an extra path segment and it responds with an endless HTTP 308 redirect loop. Only add `X-Script-Name` if you intentionally mount pgAdmin under a prefix such as `/pgadmin`.
 
 ### 🔒 HTTPS Only
 
