@@ -63,6 +63,38 @@ services:
       - sprinkler_postgres_net
       - mynetwork
 
+  sprinkler_webota:
+    build:
+      context: ./webota
+    container_name: sprinkler_webota
+    env_file:
+      - ./webota/.env
+    environment:
+      WEBOTA_DATA_DIR: "/app/data"
+    depends_on:
+      sprinkler_postgres:
+        condition: service_healthy
+    ports:
+      - "8002:8002"
+    volumes:
+      - ./webota/data:/app/data
+    healthcheck:
+      test:
+        - "CMD-SHELL"
+        - "python -c 'import urllib.request; urllib.request.urlopen(\"http://localhost:8002/healthz\")'"
+      interval: "10s"
+      timeout: "5s"
+      retries: 5
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "3"
+    restart: unless-stopped
+    networks:
+      - sprinkler_postgres_net
+      - mynetwork
+
 volumes:
   sprinkler_pgadmin_data:
     name: sprinkler_pgadmin_data
